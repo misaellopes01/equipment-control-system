@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EquipmentStatus {
+  OPERATIONAL
+  BROKEN
+}
+
+model Equipment {
+  id              String                 @id @default(uuid())
+  inventoryNumber String                 @unique
+  brand           String
+  name            String
+  allocatedBase   String
+  currentLocation String
+  isContractual   Boolean                @default(false)
+  contractCode    String?
+  contractStartAt DateTime?
+  contractEndAt   DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  statusEvents    EquipmentStatusEvent[]
+
+  @@index([brand])
+  @@index([allocatedBase])
+  @@map("equipment")
+}
+
+model EquipmentStatusEvent {
+  id          String          @id @default(uuid())
+  equipmentId String
+  status      EquipmentStatus
+  startedAt   DateTime
+  endedAt     DateTime?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  equipment   Equipment       @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@index([equipmentId])
+  @@index([equipmentId, startedAt])
+  @@index([equipmentId, endedAt])
+  @@index([startedAt])
+  @@index([endedAt])
+  @@map("equipment_status_event")
+}
